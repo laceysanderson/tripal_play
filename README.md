@@ -1,2 +1,3 @@
-# tripal_play
-A Docker for playing with Tripal. Uses the dev. version of drupal and tripal.
+# Docker Drupal DEV CI
+
+This repository will be for development of a Docker image to use Drupal 8 in CI.
