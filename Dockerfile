@@ -1,13 +1,15 @@
 FROM php:7.3-apache-stretch
 
-MAINTAINER Lacey-Anne Sanderson <laceyannesanderson@gmail.com>
 ## Base of this image is from Official DockerHub drupal image. Specifically,
 ## https://github.com/docker-library/drupal/blob/master/8.8/apache/Dockerfile
+## Heavily influenced by https://github.com/statonlab/docker-containers
+
+MAINTAINER Lacey-Anne Sanderson <laceyannesanderson@gmail.com>
 
 COPY . /app
 
 RUN chmod -R +x /app && apt-get update 1> ~/aptget.update.log \
-  && apt-get install git unzip zip --yes -qq 1> ~/aptget.extras.log
+  && apt-get install git unzip zip supervisor --yes -qq 1> ~/aptget.extras.log
 
 # install the PHP extensions we need
 RUN set -eux; \
@@ -73,3 +75,19 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
   && mv composer.phar /usr/local/bin/composer
 
 RUN composer create-project drupal-composer/drupal-project:8.x-dev tripal4 --stability dev --no-interaction
+
+# Set files directory permissions
+RUN chown -R www-data:www-data /var/www/html/tripal4/web/sites/default/files
+
+# Expose http and psql port
+EXPOSE 80 5432
+
+# Configuration files
+COPY supervisord.conf /etc/supervisord.conf
+COPY apache.conf /etc/httpd/conf.d/apache.conf
+
+# Activation scripts
+COPY init.sh /usr/bin/init.sh
+RUN chmod +x /usr/bin/init.sh
+
+ENTRYPOINT ["init.sh"]
