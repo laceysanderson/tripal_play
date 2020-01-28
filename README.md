@@ -9,9 +9,18 @@ Currently we have the following installed:
  - Composer
  - Drupal 8.8-dev downloaded using composer.
 
-1. Build the docker image: `docker build -t="drupal8dev_ci" .`
+1. Build the docker image:
+```
+docker build -t="drupal8dev_ci" .
+```
 2. Run the image in the background mapping it's webserver to your port 9000:
-  `docker run --publish=9000:80 -t -i -d drupal8dev_ci /bin/bash`
-3. Navigate to `http://localhost:9000/tripal4/web/` to install Drupal through the UI.
+```
+docker run --publish=9000:80 --name=drupal8dev_ci -t -i -d drupal8dev_ci
+```
+3. Start the database in your container.
+```
+docker exec drupal8dev_ci service postgresql start
+```
+NOTE: it takes a little while for the database to start. If the website doesn't load, wait a little longer and try again.
 
-WARNING: Currently there is not database associated with this container.
+4. Navigate to `http://localhost:9000/tripal4/web/` to use your newly installed site!
