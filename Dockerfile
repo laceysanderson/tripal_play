@@ -37,8 +37,8 @@ USER postgres
 RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker docker \
-    && psql --command="CREATE USER tripaladmin WITH PASSWORD 'tripal4developmentonlylocal'" \
-    && psql --command="CREATE DATABASE tripal4_dev WITH OWNER tripaladmin"
+    && psql --command="CREATE USER drupaladmin WITH PASSWORD 'drupal8developmentonlylocal'" \
+    && psql --command="CREATE DATABASE drupal8_dev WITH OWNER drupaladmin"
 
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible.
@@ -116,31 +116,37 @@ WORKDIR /var/www/html
 
 ############# DRUPAL ############################
 
+ENV SIMPLETEST_BASE_URL=http://localhost/drupal8/web
+ENV SIMPLETEST_DB=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/drupal8_dev
+ENV BROWSER_OUTPUT_DIRECTORY=/var/www/html/drupal8/web/sites/default/files/simpletest/output
+
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
   && php -r "if (hash_file('sha384', 'composer-setup.php') === 'c5b9b6d368201a9db6f74e2611495f369991b72d9c8cbd3ffbc63edff210eb73d46ffbfce88669ad33695ef77dc76976') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
   && php composer-setup.php \
   && mv composer.phar /usr/local/bin/composer
 
 RUN export COMPOSER_MEMORY_LIMIT=-1 \
-  && composer create-project drupal-composer/drupal-project:8.x-dev tripal4 --stability dev --no-interaction
+  && composer create-project drupal-composer/drupal-project:8.x-dev drupal8 --stability dev --no-interaction
 
 # Set files directory permissions
-RUN chown -R www-data:www-data /var/www/html/tripal4
+RUN chown -R www-data:www-data /var/www/html/drupal8 \
+  && chmod 02775 -R /var/www/html/drupal8/web/sites/default/files \
+  && usermod -g www-data root
 
 # Expose http and psql port
 EXPOSE 80 5432
 
-RUN cd /var/www/html/tripal4 \
+RUN cd /var/www/html/drupal8 \
   && service apache2 start \
   && service postgresql start \
   && sleep 30 \
-  && /var/www/html/tripal4/vendor/drush/drush/drush site-install standard \
-  --db-url=pgsql://tripaladmin:tripal4developmentonlylocal@localhost/tripal4_dev \
-  --account-mail="tripaladmin@localhost" \
-  --account-name=tripaladmin \
+  && /var/www/html/drupal8/vendor/drush/drush/drush site-install standard \
+  --db-url=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/drupal8_dev \
+  --account-mail="drupaladmin@localhost" \
+  --account-name=drupaladmin \
   --account-pass=some_admin_password \
-  --site-mail="tripaladmin@localhost" \
-  --site-name="Tripal 4 Development"
+  --site-mail="drupaladmin@localhost" \
+  --site-name="Drupal 8 Development"
 
 # Configuration files
 COPY supervisord.conf /etc/supervisord.conf
