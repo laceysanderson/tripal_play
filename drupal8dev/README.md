@@ -3,11 +3,14 @@
 This repository will be for development of a Docker image to use Drupal 8 in CI.
 
 Currently we have the following installed:
- - Debian Stretch(9)
- - PHP 7.3 + extensions needed for Drupal
- - Apache2
- - Composer
- - Drupal 8.8-dev downloaded using composer.
+
+   - Debian Buster(10)
+   - PHP 7.3.18 + extensions needed for Drupal (Memory limit 1028M)
+   - Apache 2.4.38
+   - PostgreSQL 11.7
+   - Composer
+   - Drupal 8.8-dev downloaded using composer.
+
 
 1. Build the docker image:
 ```
