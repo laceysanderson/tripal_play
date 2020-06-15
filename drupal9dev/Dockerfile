@@ -127,7 +127,8 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 
 RUN export COMPOSER_MEMORY_LIMIT=-1 \
   && composer -n create-project drupal/recommended-project:9.0@dev drupal9 --stability dev --no-interaction \
-  && cd drupal9 && composer require drush/drush
+  && cd drupal9 && composer require drush/drush \
+  && composer require drupal/core-dev
 
 # Set files directory permissions
 #   && chmod 02775 -R /var/www/html/drupal9/web/sites/default/files \
