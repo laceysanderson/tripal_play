@@ -121,7 +121,7 @@ ENV SIMPLETEST_DB=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/drup
 ENV BROWSER_OUTPUT_DIRECTORY=/var/www/html/drupal8/web/sites/default/files/simpletest/output
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-  && php -r "if (hash_file('sha384', 'composer-setup.php') === 'e0012edf3e80b6978849f5eff0d4b4e4c79ff1609dd1e613307e16318854d24ae64f26d17af3ef0bf7cfb710ca74755a') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
+  && php -r "if (hash_file('sha384', 'composer-setup.php') === '8a6138e2a05a8c28539c9f0fb361159823655d7ad2deecb371b04a83966c61223adc522b0189079e3e9e277cd72b8897') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
   && php composer-setup.php \
   && mv composer.phar /usr/local/bin/composer
 

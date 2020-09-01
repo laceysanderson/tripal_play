@@ -8,8 +8,8 @@ Currently we have the following installed:
    - PHP 7.3.18 + extensions needed for Drupal (Memory limit 1028M)
    - Apache 2.4.38
    - PostgreSQL 11.7
-   - Composer
-   - Drupal 8.8-dev downloaded using composer.
+   - Composer 1.10.10
+   - Drupal 8.9.3 (8.x-dev) downloaded using composer.
 
 
 1. Build the docker image:
