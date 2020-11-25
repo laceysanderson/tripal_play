@@ -29,6 +29,8 @@ vendor/drush/drush/drush site-install standard --yes \
   --account-pass=$ADMINPASS \
   --site-mail="$DRUPALEMAIL" \
   --site-name="$SITENAME"
+chmod a+r -R /var/www/html/sites/default/files
+chown -R www-data:www-data /var/www/html/sites/default/files
 
 echo "INSTALL DRUPAL MODULES"
 vendor/drush/drush/drush pm-enable --yes libraries

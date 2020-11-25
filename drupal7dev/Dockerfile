@@ -72,6 +72,4 @@ RUN org='tripal' && repo='tripal' \
 
 RUN  chmod a+r -R /var/www/html/sites/all \
   && chown -R www-data:www-data /var/www/html/sites/all \
-  && chmod a+r -R /var/www/html/sites/default/files \
-  && chown -R www-data:www-data /var/www/html/sites/default/files \
   && chmod +x /app/init_scripts/startup_container.sh
