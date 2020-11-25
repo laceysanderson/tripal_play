@@ -10,6 +10,19 @@ COPY . /app
 RUN chmod -R +x /app && apt-get update 1> ~/aptget.update.log \
   && apt-get install git unzip zip wget gnupg2 supervisor --yes -qq 1> ~/aptget.extras.log
 
+########## Drupal Additions #####################
+WORKDIR /usr/local/etc/php/
+RUN cp php.ini-development php.ini \
+  && sed -i 's/memory_limit\s*=.*/memory_limit = 5G/g' php.ini \
+  && php -r "echo ini_get('memory_limit').PHP_EOL;" \
+  && service apache2 restart
+
+########## Drupal Additions #####################
+WORKDIR /var/www/html
+RUN chmod a+x /app/init_scripts/composer-init.sh \
+  && /app/init_scripts/composer-init.sh \
+  && vendor/bin/drush --version
+
 ########## PostgreSQL ###########################
 
 # This seems to be needed though I'm not sure why.
@@ -48,18 +61,6 @@ USER root
 RUN apt-get update  --yes -qq 1> ~/aptget.update.2.log \
   && apt-get install certbot python-certbot-apache --yes -qq 1> ~/aptget.certbot.log
 
-########## Drupal Additions #####################
-WORKDIR /usr/local/etc/php/
-RUN cp php.ini-development php.ini \
-  && sed -i 's/memory_limit\s*=.*/memory_limit = 5GB/g' php.ini \
-  && service apache2 restart
-
-########## Drupal Additions #####################
-WORKDIR /var/www/html
-RUN chmod a+x /app/init_scripts/composer-init.sh \
-  && /app/init_scripts/composer-init.sh \
-  && vendor/bin/drush --version
-
 ########## Tripal ###############################
 WORKDIR /var/www/html/sites/all/modules
 RUN org='tripal' && repo='tripal' \
@@ -71,4 +72,6 @@ RUN org='tripal' && repo='tripal' \
 
 RUN  chmod a+r -R /var/www/html/sites/all \
   && chown -R www-data:www-data /var/www/html/sites/all \
+  && chmod a+r -R /var/www/html/sites/default/files \
+  && chown -R www-data:www-data /var/www/html/sites/default/files \
   && chmod +x /app/init_scripts/startup_container.sh
