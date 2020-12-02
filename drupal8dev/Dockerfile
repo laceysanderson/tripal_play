@@ -158,6 +158,11 @@ RUN mv /app/init_scripts/supervisord.conf /etc/supervisord.conf \
   && mv /app/init_scripts/init.sh /usr/bin/init.sh \
   && chmod +x /usr/bin/init.sh
 
+# Make global commands.
+RUN ln -s /var/www/drupal8/vendor/drupal/console/bin/drupal /usr/local/bin/ \
+  && ln -s /var/www/drupal8/vendor/phpunit/phpunit/phpunit /usr/local/bin/ \
+  && ln -s /var/www/drupal8/vendor/drush/drush/drush /usr/local/bin/
+
 WORKDIR /var/www/drupal8/web
 
 ENTRYPOINT ["init.sh"]

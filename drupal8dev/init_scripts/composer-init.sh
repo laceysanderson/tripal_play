@@ -12,6 +12,5 @@ then
 fi
 
 php -d memory_limit=-1 composer-setup.php --quiet
-rm composer-setup.php
 mv composer.phar /usr/local/bin/composer
 composer --quiet require drush/drush:8.*
