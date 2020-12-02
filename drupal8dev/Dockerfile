@@ -119,8 +119,8 @@ WORKDIR /var/www/html
 ############# DRUPAL ############################
 
 ENV SIMPLETEST_BASE_URL=http://localhost
-ENV SIMPLETEST_DB=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/drupal8_dev
-ENV BROWSER_OUTPUT_DIRECTORY=/var/www/drupal8/web/sites/default/files/simpletest/output
+ENV SIMPLETEST_DB=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/sitedb
+ENV BROWSER_OUTPUT_DIRECTORY=/var/www/drupal8/web/sites/default/files/simpletest
 
 WORKDIR /var/www
 RUN chmod a+x /app/init_scripts/composer-init.sh \
@@ -154,7 +154,7 @@ RUN cd /var/www/drupal8 \
 # Configuration files & Activation script
 RUN mv /app/init_scripts/supervisord.conf /etc/supervisord.conf \
   && mv /app/default_files/000-default.conf /etc/apache2/sites-available/000-default.conf \
-  && echo "$settings['trusted_host_patterns'] = [ '^localhost$', '^127\.0\.0\.1$' ];" >> /var/www/drupal8/web/sites/default/settings.php \
+  && echo "\$settings["trusted_host_patterns"] = [ '^localhost$', '^127\.0\.0\.1$' ];" >> /var/www/drupal8/web/sites/default/settings.php \
   && mv /app/init_scripts/init.sh /usr/bin/init.sh \
   && chmod +x /usr/bin/init.sh
 
