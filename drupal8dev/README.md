@@ -26,9 +26,9 @@ docker exec drupal8dev_ci service postgresql start
 ```
 NOTE: it takes a little while for the database to start. If the website doesn't load, wait a little longer and try again.
 
-4. Navigate to `http://localhost:9000/drupal8/web/` to use your newly installed site! The administration user is drupaladmin:some_admin_password
+4. Navigate to `http://localhost:9000` to use your newly installed site! The administration user is drupaladmin:some_admin_password
 
 5. Run some PHPunit tests.
 ```
-docker exec --workdir=/var/www/html/drupal8/web drupal8dev_ci ../vendor/phpunit/phpunit/phpunit --configuration core core/modules/simpletest/tests
+docker exec drupal8dev_ci ../vendor/phpunit/phpunit/phpunit --configuration core core/modules/simpletest/tests
 ```

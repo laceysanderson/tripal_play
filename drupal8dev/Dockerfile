@@ -37,19 +37,21 @@ RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker docker \
     && psql --command="CREATE USER drupaladmin WITH PASSWORD 'drupal8developmentonlylocal'" \
-    && psql --command="CREATE DATABASE drupal8_dev WITH OWNER drupaladmin"
+    && psql --command="ALTER USER drupaladmin WITH LOGIN" \
+    && psql --command="ALTER USER drupaladmin WITH CREATEDB" \
+    && psql --command="CREATE DATABASE sitedb WITH OWNER drupaladmin"
+
+USER root
 
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible.
-RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/11/main/pg_hba.conf
+RUN mv /app/default_files/postgresql/pg_hba.conf /etc/postgresql/11/main/pg_hba.conf
 
 # And add ``listen_addresses`` to ``/etc/postgresql/11/main/postgresql.conf``
 RUN echo "listen_addresses='*'" >> /etc/postgresql/11/main/postgresql.conf
 
 # Expose the PostgreSQL port
 EXPOSE 5432
-
-USER root
 
 ########## PHP EXTENSIONS #######################
 # install the PHP extensions we need
@@ -107,7 +109,7 @@ RUN { \
 		echo 'opcache.max_accelerated_files=4000'; \
 		echo 'opcache.revalidate_freq=60'; \
 		echo 'opcache.fast_shutdown=1'; \
-    echo 'opcache.memory_limit=768M';\
+    echo 'opcache.memory_limit=1028M';\
 	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
 RUN echo 'memory_limit = 1028M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
@@ -116,44 +118,46 @@ WORKDIR /var/www/html
 
 ############# DRUPAL ############################
 
-ENV SIMPLETEST_BASE_URL=http://localhost/drupal8/web
+ENV SIMPLETEST_BASE_URL=http://localhost
 ENV SIMPLETEST_DB=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/drupal8_dev
-ENV BROWSER_OUTPUT_DIRECTORY=/var/www/html/drupal8/web/sites/default/files/simpletest/output
+ENV BROWSER_OUTPUT_DIRECTORY=/var/www/drupal8/web/sites/default/files/simpletest/output
 
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-  && php -r "if (hash_file('sha384', 'composer-setup.php') === '8a6138e2a05a8c28539c9f0fb361159823655d7ad2deecb371b04a83966c61223adc522b0189079e3e9e277cd72b8897') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
-  && php composer-setup.php \
-  && mv composer.phar /usr/local/bin/composer
+WORKDIR /var/www
+RUN chmod a+x /app/init_scripts/composer-init.sh \
+  && /app/init_scripts/composer-init.sh \
+  && vendor/bin/drush --version
 
+WORKDIR /var/www
 RUN export COMPOSER_MEMORY_LIMIT=-1 \
   && composer create-project drupal-composer/drupal-project:8.x-dev drupal8 --stability dev --no-interaction
 
 # Set files directory permissions
-RUN chown -R www-data:www-data /var/www/html/drupal8 \
-  && chmod 02775 -R /var/www/html/drupal8/web/sites/default/files \
+RUN chown -R www-data:www-data /var/www/drupal8 \
+  && chmod 02775 -R /var/www/drupal8/web/sites/default/files \
   && usermod -g www-data root
 
 # Expose http and psql port
 EXPOSE 80 5432
 
-RUN cd /var/www/html/drupal8 \
+RUN cd /var/www/drupal8 \
   && service apache2 start \
   && service postgresql start \
   && sleep 30 \
-  && /var/www/html/drupal8/vendor/drush/drush/drush site-install standard \
-  --db-url=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/drupal8_dev \
+  && /var/www/drupal8/vendor/drush/drush/drush site-install standard \
+  --db-url=pgsql://drupaladmin:drupal8developmentonlylocal@localhost/sitedb \
   --account-mail="drupaladmin@localhost" \
   --account-name=drupaladmin \
   --account-pass=some_admin_password \
   --site-mail="drupaladmin@localhost" \
   --site-name="Drupal 8 Development"
 
-# Configuration files
-COPY supervisord.conf /etc/supervisord.conf
-COPY apache.conf /etc/httpd/conf.d/apache.conf
+# Configuration files & Activation script
+RUN mv /app/init_scripts/supervisord.conf /etc/supervisord.conf \
+  && mv /app/default_files/000-default.conf /etc/apache2/sites-available/000-default.conf \
+  && echo "$settings['trusted_host_patterns'] = [ '^localhost$', '^127\.0\.0\.1$' ];" >> /var/www/drupal8/web/sites/default/settings.php \
+  && mv /app/init_scripts/init.sh /usr/bin/init.sh \
+  && chmod +x /usr/bin/init.sh
 
-# Activation scripts
-COPY init.sh /usr/bin/init.sh
-RUN chmod +x /usr/bin/init.sh
+WORKDIR /var/www/drupal8/web
 
 ENTRYPOINT ["init.sh"]
