@@ -10,6 +10,9 @@ COPY . /app
 RUN chmod -R +x /app && apt-get update 1> ~/aptget.update.log \
   && apt-get install git unzip zip wget gnupg2 supervisor --yes -qq 1> ~/aptget.extras.log
 
+########## Apache block sensitive files ###############################
+COPY ./default_files/block-files.conf /etc/apache2/conf-enabled
+
 ########## Drupal Additions #####################
 WORKDIR /usr/local/etc/php/
 RUN cp php.ini-development php.ini \
